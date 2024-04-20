@@ -1,4 +1,4 @@
 /app/__pycache__/*
-/services/__pycache__/*
+/app/services/__pycache__/*
 .env
 /database/*
