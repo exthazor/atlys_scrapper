@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 from typing import Optional, List, Dict
 import time
-import asyncio
 
 def fetch_page(url: str, proxy: Optional[str] = None, user_agent: str = None, retries=3, delay=3) -> str:
     """
@@ -21,7 +20,7 @@ def fetch_page(url: str, proxy: Optional[str] = None, user_agent: str = None, re
             if attempt < retries - 1:
                 time.sleep(delay)
             else:
-                raise
+                raise Exception(f"Failed to fetch page after {retries} attempts: {e}")
 
 def parse_page(html_content: str) -> List[Dict[str, str]]:
     """
@@ -32,7 +31,7 @@ def parse_page(html_content: str) -> List[Dict[str, str]]:
     for product in soup.find_all('div', class_='product-inner'):
         title = product.find('h2', class_='woo-loop-product__title').find('a').get_text(strip=True) if product.find('h2', class_='woo-loop-product__title') and product.find('h2', class_='woo-loop-product__title').find('a') else "No title available"
         price = product.find('span', class_='woocommerce-Price-amount').get_text(strip=True) if product.find('span', class_='woocommerce-Price-amount') else "No price available"
-        image_url = product.find('img')['src'] if product.find('img') and 'src' in product.find('img').attrs else "No image available"
+        image_url = product.find('img')['src'] if product.find('img') else "No image available"
         products.append({
             'product_title': title,
             'product_price': price,
@@ -46,8 +45,11 @@ def scrape_products(base_url: str, page_limit: int = 5, proxy: Optional[str] = N
     """
     products = []
     for page_number in range(1, page_limit + 1):
-        url = f"{base_url}?page={page_number}"
+        url = f"{base_url}page/{page_number}/"
         html_content = fetch_page(url, proxy)
-        products.extend(parse_page(html_content))
+        new_products = parse_page(html_content)
+        if not new_products:
+            break
+        products.extend(new_products)
         time.sleep(rate_limit_seconds)
     return products
