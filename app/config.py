@@ -8,3 +8,6 @@ def get_storage_config():
         'type': os.getenv('STORAGE_TYPE', 'postgres'),
         'dsn': os.getenv('DATABASE_URL')
     }
+
+def get_redis_url():
+    return os.getenv("REDIS_URL", "redis://localhost:6379")
