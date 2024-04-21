@@ -5,6 +5,7 @@ from .storages.postgres_storage import PostgresStorage
 from .storages.storage_interface import StorageInterface
 from .redis_manager import RedisManager
 from .notifications.console_notification import ConsoleNotification
+from .dependencies import valid_api_key
 
 app = FastAPI()
 
@@ -25,7 +26,7 @@ def get_storage() -> StorageInterface:
     return PostgresStorage(config['dsn'])
 
 @app.post("/scrape/dentelstall/")
-async def add_product(page_limit: int = 5, storage: StorageInterface = Depends(get_storage)):
+async def add_product(page_limit: int = 5, storage: StorageInterface = Depends(get_storage), api_key: str = Depends(valid_api_key)):
     notifier = ConsoleNotification()
     product_service = ProductService(storage, redis_manager, notifier)
     result = await product_service.fetch_and_process_products("https://dentalstall.com/shop/", page_limit)
